@@ -20,4 +20,6 @@ gpio_output_t gpio_outputs[3];
 
 bool set_gpio_config(const int32_t num, const gpio_config gc);
 
+void gpio_init(void);
+
 void gpio_task(void *pvParameters);
