@@ -4,7 +4,8 @@
 #include <semphr.h>
 #include "buffer.hpp"
 
-constexpr uint32_t gpio_buffer_size{1024};
+constexpr int32_t gpio_buffer_size{1024};
+constexpr int32_t gpio_cnt{3};
 
 struct gpio_output_t {
   buffer_t<uint8_t, gpio_buffer_size> gpio_data{};
@@ -12,12 +13,16 @@ struct gpio_output_t {
 };
 
 typedef struct gpio_config {
-    bool enabled{false}; 
-    uint32_t frequency;
+  bool enabled{false}; 
+  int32_t frequency;
 };
 
 gpio_output_t gpio_outputs[3];
 
+void gpio_init();
+
 bool set_gpio_config(const int32_t num, const gpio_config gc);
+
+gpio_config get_gpio_config(const int32_t num);
 
 void gpio_task(void *pvParameters);

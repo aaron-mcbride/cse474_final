@@ -3,9 +3,6 @@
 
 bool set_i2c_config(const i2c_config_t config) {
 
-  // Disable I2C
-
-
 
   if (config.enabled) {
 

@@ -6,6 +6,7 @@
 #include "buffer.hpp"
 
 constexpr int32_t uart_buffer_size{1024};
+constexpr int32_t uart_cnt{4};
 
 enum class uart_parity_t {
   none,
@@ -32,6 +33,8 @@ struct uart_config_t {
 };
 
 uart_output_t uart_output[4]{};
+
+void init_uart();
 
 bool set_uart_config(const int32_t num, const uart_config_t config);
 

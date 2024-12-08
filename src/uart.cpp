@@ -41,7 +41,13 @@ static constexpr baud_ref_t baud_ref[10] = {
 
 // Check if a uart number is valid
 static bool valid_uart(const int32_t num) {
-  return num >= 0 && num <= 4;
+  return num >= 0 && num < uart_cnt;
+}
+
+void init_uart() {
+  for (int32_t i = 0; i < uart_cnt; i++) {
+    uart_output[i].data_sem = xSemaphoreCreateBinary();
+  }
 }
 
 // update uart peripheral configuration
