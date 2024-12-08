@@ -25,6 +25,7 @@ static constexpr uart_ref_t uart_ref[4] = {
   {0, 1, 2, &DDRJ, &UCSR3A, &UCSR3B, &UCSR3C, &UDR3, &UBRR3},
 };
 
+static constexpr int32_t baud_rate_cnt{10};
 static constexpr baud_ref_t baud_ref[10] = {
   {2400, 416},
   {4800, 207},
@@ -38,63 +39,46 @@ static constexpr baud_ref_t baud_ref[10] = {
   {115200, 8},
 };
 
+// Check if a uart number is valid
 static bool valid_uart(const int32_t num) {
   return num >= 0 && num <= 4;
 }
 
+// update uart peripheral configuration
 bool set_uart_config(const int32_t num, const uart_config_t config) {
   if (!valid_uart(num)) { return false; }
   auto &ref{uart_ref[num]};
 
-  // Set enabled
-  if (config.enabled) {
-    *ref.ddr_reg |= bit(ref.rx_pin);
-    *ref.ddr_reg |= bit(ref.tx_pin);
-    *ref.ddr_reg |= bit(ref.clk_pin);
-    *ref.ctrl_reg_b |= bit(RXEN0);
-    *ref.ctrl_reg_b |= bit(RXCIE0);
-  } else {
-    *ref.ctrl_reg_b &= ~bit(RXEN0);
-    *ref.ctrl_reg_b &= ~bit(RXCIE0);
-    *ref.ddr_reg &= ~bit(ref.rx_pin);
-    *ref.ddr_reg &= ~bit(ref.tx_pin);
-    *ref.ddr_reg &= ~bit(ref.clk_pin);
-  }
-  // Set baud rate to nearest possible value
-  int32_t best_baud_idx{-1};
-  int32_t best_baud_diff{-1};
-  for (int32_t i = 0; i < sizeof(baud_ref) / sizeof(baud_ref[0]); i++) {
-    const int32_t baud_diff{config.baud_rate - baud_ref[i].baud_rate};
-    if (baud_diff >= 0 && (best_baud_idx == -1 ||
-        baud_diff < best_baud_diff)) {
-      best_baud_diff = baud_diff;
-      best_baud_idx = i;
+  // Disable uart peripheral/interrupt
+  *ref.ctrl_reg_b &= ~bit(RXEN0);
+  *ref.ctrl_reg_b &= ~bit(RXCIE0);
+
+  // Set baud rate
+  for (int32_t i = 0; i < baud_rate_cnt; i++) {
+    if (baud_ref[i].baud_rate == config.baud_rate) {
+      *ref.baud_reg = baud_ref[i].ubrr_value;
+      break;
+    } else if (i == baud_rate_cnt - 1) {
+      return false;
     }
   }
-  if (best_baud_idx == -1) { return false; }
-  *ref.baud_reg = baud_ref[best_baud_idx].ubrr_value;
-
-  // Set stop bits
-  if (config.stop_bits == 1) {
-    *ref.ctrl_reg_c &= ~bit(USBS0);
-  } else if (config.stop_bits == 2) {
-    *ref.ctrl_reg_c |= bit(USBS0);
-  } else {
-    return false;
-  }
   // Set packet size
-  if (config.packet_size == 5) {
-    *ref.ctrl_reg_c = (*ref.ctrl_reg_c & 
-        ~bit(UCSZ00)) & ~bit(UCSZ01) & ~bit(UCSZ02);
-  } else if (config.packet_size == 6) {
-    *ref.ctrl_reg_c = (*ref.ctrl_reg_c & 
-        ~bit(UCSZ00)) | bit(UCSZ01) & ~bit(UCSZ02);
-  } else if (config.packet_size == 7) {
-    *ref.ctrl_reg_c = (*ref.ctrl_reg_c | 
-        bit(UCSZ00)) & ~bit(UCSZ01) & ~bit(UCSZ02);
-  } else if (config.packet_size == 8) {
-    *ref.ctrl_reg_c = (*ref.ctrl_reg_c | 
-        bit(UCSZ00)) | bit(UCSZ01) & ~bit(UCSZ02);
+  if (config.data_size == 5) {
+    *ref.ctrl_reg_c &= ~bit(UCSZ00);
+    *ref.ctrl_reg_c &= ~bit(UCSZ01);
+    *ref.ctrl_reg_c &= ~bit(UCSZ02);
+  } else if (config.data_size == 6) {
+    *ref.ctrl_reg_c |= bit(UCSZ00);
+    *ref.ctrl_reg_c &= ~bit(UCSZ01);
+    *ref.ctrl_reg_c &= ~bit(UCSZ02);
+  } else if (config.data_size == 7) {
+    *ref.ctrl_reg_c &= ~bit(UCSZ00);
+    *ref.ctrl_reg_c |= bit(UCSZ01);
+    *ref.ctrl_reg_c &= ~bit(UCSZ02);
+  } else if (config.data_size == 8) {
+    *ref.ctrl_reg_c |= bit(UCSZ00);
+    *ref.ctrl_reg_c |= bit(UCSZ01);
+    *ref.ctrl_reg_c &= ~bit(UCSZ02);
   } else {
     return false;
   }
@@ -121,8 +105,27 @@ bool set_uart_config(const int32_t num, const uart_config_t config) {
   } else {
     return false;
   }
+  // set enabled
+  if (config.enabled) {    
+    *ref.ddr_reg |= bit(ref.rx_pin);
+    *ref.ddr_reg |= bit(ref.tx_pin);
+    *ref.ddr_reg |= bit(ref.clk_pin);
+    *ref.ctrl_reg_b |= bit(RXEN0);
+    *ref.ctrl_reg_b |= bit(RXCIE0);
+    *ref.ctrl_reg_b &= ~bit(TXEN0);
+    *ref.ctrl_reg_c &= ~bit(USBS0);
+    *ref.ctrl_reg_c &= ~bit(UCPOL0);
+  } else {
+    *ref.ctrl_reg_b &= ~bit(RXEN0);
+    *ref.ctrl_reg_b &= ~bit(RXCIE0);
+    *ref.ddr_reg &= ~bit(ref.rx_pin);
+    *ref.ddr_reg &= ~bit(ref.tx_pin);
+    *ref.ddr_reg &= ~bit(ref.clk_pin);
+  }
+  return true;
 }
 
+// Get a uart peripheral's configuration
 uart_config_t get_uart_config(const int32_t num) {
   uart_config_t config{};
   if (valid_uart(num)) { 
@@ -136,27 +139,29 @@ uart_config_t get_uart_config(const int32_t num) {
     }
     // Get baud rate
     const uint32_t baud_value = *ref.baud_reg;
-    for (int32_t i = 0; i < sizeof(baud_ref) / sizeof(baud_ref[0]); i++) {
+    for (int32_t i = 0; i < baud_rate_cnt; i++) {
       if (baud_value == baud_ref[i].ubrr_value) {
         config.baud_rate = baud_ref[i].baud_rate;
         break;
       }
     }
-    // Get stop bits
-    if (*ref.ctrl_reg_c & bit(USBS0)) {
-      config.stop_bits = 2;
-    } else {
-      config.stop_bits = 1;
-    }
-    // Get packet size
-    if ((*ref.ctrl_reg_c & bit(UCSZ00)) && (*ref.ctrl_reg_c & bit(UCSZ01))) {
-      config.packet_size = 5;
-    } else if ((*ref.ctrl_reg_c & bit(UCSZ00)) && !(*ref.ctrl_reg_c & bit(UCSZ01))) {
-      config.packet_size = 6;
-    } else if (!(*ref.ctrl_reg_c & bit(UCSZ00)) && (*ref.ctrl_reg_c & bit(UCSZ01))) {
-      config.packet_size = 7;
-    } else {
-      config.packet_size = 8;
+    // Get data size
+    if ((*ref.ctrl_reg_c & bit(UCSZ00)) && 
+        (*ref.ctrl_reg_c & bit(UCSZ01)) &&
+        (*ref.ctrl_reg_c & bit(UCSZ02))) {
+      config.data_size = 5;
+    } else if ((*ref.ctrl_reg_c & bit(UCSZ00)) && 
+        !(*ref.ctrl_reg_c & bit(UCSZ01)) &&
+        (*ref.ctrl_reg_c & bit(UCSZ02))) {
+      config.data_size = 6;
+    } else if (!(*ref.ctrl_reg_c & bit(UCSZ00)) && 
+        (*ref.ctrl_reg_c & bit(UCSZ01)) &&
+        !(*ref.ctrl_reg_c & bit(UCSZ02))) {
+      config.data_size = 7;
+    } else if ((*ref.ctrl_reg_c & bit(UCSZ00)) && 
+        (*ref.ctrl_reg_c & bit(UCSZ01)) &&
+        !(*ref.ctrl_reg_c & bit(UCSZ02))) {
+      config.data_size = 8;
     }
     // Get mode
     if (*ref.ctrl_reg_c & bit(UMSEL00)) {
@@ -165,9 +170,11 @@ uart_config_t get_uart_config(const int32_t num) {
       config.mode = uart_mode_t::async;
     }
     // Get parity
-    if (*ref.ctrl_reg_c & bit(UPM00) && *ref.ctrl_reg_c & bit(UPM01)) {
+    if ((*ref.ctrl_reg_c & bit(UPM00)) && 
+        (*ref.ctrl_reg_c & bit(UPM01))) {
       config.parity = uart_parity_t::odd;
-    } else if (*ref.ctrl_reg_c & bit(UPM00) && !(*ref.ctrl_reg_c & bit(UPM01))) {
+    } else if ((*ref.ctrl_reg_c & bit(UPM00)) && 
+        !(*ref.ctrl_reg_c & bit(UPM01))) {
       config.parity = uart_parity_t::even;
     } else {
       config.parity = uart_parity_t::none;
@@ -176,31 +183,28 @@ uart_config_t get_uart_config(const int32_t num) {
   return config;
 }
 
+// Data collection ISRs
 ISR(USART0_RX_vect) {
-  xSemaphoreTakeFromISR(uart_output[0].data_sem, NULL);
+  xSemaphoreTakeFromISR(uart_output[0].data_sem, nullptr);
   const uint8_t rx_value = *uart_ref[0].rx_reg;
   uart_output[0].uart_data.push(rx_value);
-  xSemaphoreGiveFromISR(uart_output[0].data_sem, NULL);
-
+  xSemaphoreGiveFromISR(uart_output[0].data_sem, nullptr);
 }
-
 ISR(USART1_RX_vect) {
-  xSemaphoreTakeFromISR(uart_output[1].data_sem, NULL);
+  xSemaphoreTakeFromISR(uart_output[1].data_sem, nullptr);
   const uint8_t rx_value = *uart_ref[1].rx_reg;
   uart_output[1].uart_data.push(rx_value);
-  xSemaphoreGiveFromISR(uart_output[1].data_sem, NULL);
+  xSemaphoreGiveFromISR(uart_output[1].data_sem, nullptr);
 }
-
 ISR(USART2_RX_vect) {
-  xSemaphoreTakeFromISR(uart_output[2].data_sem, NULL);
+  xSemaphoreTakeFromISR(uart_output[2].data_sem, nullptr);
   const uint8_t rx_value = *uart_ref[2].rx_reg;
   uart_output[2].uart_data.push(rx_value);
-  xSemaphoreGiveFromISR(uart_output[2].data_sem, NULL);
+  xSemaphoreGiveFromISR(uart_output[2].data_sem, nullptr);
 }
-
 ISR(USART3_RX_vect) {
-  xSemaphoreTakeFromISR(uart_output[3].data_sem, NULL);
+  xSemaphoreTakeFromISR(uart_output[3].data_sem, nullptr);
   const uint8_t rx_value = *uart_ref[3].rx_reg;
   uart_output[3].uart_data.push(rx_value);
-  xSemaphoreGiveFromISR(uart_output[3].data_sem, NULL);
+  xSemaphoreGiveFromISR(uart_output[3].data_sem, nullptr);
 }
