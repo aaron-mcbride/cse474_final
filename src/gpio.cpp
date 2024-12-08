@@ -10,16 +10,17 @@ struct gpio_ref_t {
     volatile uint8_t* port_reg;
     volatile uint8_t* ddr_reg;
     uint8_t portreg_bit;
-    uint32_t freq;
-} gpio_ref_t;
-
-gpio_ref_t gpiopins[3] = {
-    {uint8_t(0), uint32_t(23), &PORTA, &DDRA, uint8_t(1), uint32_t(100)},
-    {uint8_t(1), uint32_t(25), &PORTA, &DDRA, uint8_t(3), uint32_t(100)},
-    {uint8_t(2), uint32_t(27), &PORTA, &DDRA, uint8_t(5), uint32_t(100)}
 };
 
-TaskHandle_t gpio_tasks[3];
+gpio_ref_t gpiopins[3]{
+    {uint8_t(0), uint32_t(23), &PORTA, &DDRA, uint8_t(1)},
+    {uint8_t(1), uint32_t(25), &PORTA, &DDRA, uint8_t(3)},
+    {uint8_t(2), uint32_t(27), &PORTA, &DDRA, uint8_t(5)}
+};
+
+int32_t gpio_freq[3]{0, 0, 0};
+
+TaskHandle_t gpio_tasks[3]{nullptr, nullptr, nullptr};
 
 void gpio_task(void *pvParameters){
     gpio_ref_t* curr = static_cast<gpio_ref_t*>(pvParameters);
@@ -38,13 +39,13 @@ bool isValidPin(const int32_t num){
 void gpio_init(void) {
     for(int i = 0; i < 3; i++){
         xTaskCreate(
-                    gpio_task,
-                    "gpio_task",
-                    128,
-                    &gpiopins[i],
-                    2,
-                    &gpio_tasks[i]
-                    );
+            gpio_task,
+            "gpio_task",
+            128,
+            &gpiopins[i],
+            2,
+            &gpio_tasks[i]
+        );
         gpio_outputs[i].data_sem = xSemaphoreCreateBinary();
         xSemaphoreGive(gpio_outputs[i].data_sem);
     }
@@ -65,7 +66,16 @@ bool set_gpio_config(const int32_t num, const gpio_config gc){
     }
 
     // set frequency
-    gpiopins[num].freq = gc.frequency;
-
+    gpio_freq[num] = gc.frequency;
     return true;
+}
+
+// Get the current GPIO config
+gpio_config get_gpio_config(const int32_t num){
+  gpio_config config{};
+  if(isValidPin(num)){  
+    config.enabled = *gpiopins[num].ddr_reg & bit(gpiopins[num].portreg_bit);
+    config.frequency = gpio_freq[num];
+  }
+  return config;
 }
