@@ -23,6 +23,6 @@ void gpio_init();
 
 bool set_gpio_config(const int32_t num, const gpio_config gc);
 
-gpio_config get_gpio_config(const int32_t num);
+void gpio_init(void);
 
 void gpio_task(void *pvParameters);
