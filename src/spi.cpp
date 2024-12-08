@@ -64,18 +64,12 @@ bool set_spi_config(const spi_config_t config) {
   }
   // Set spi enabled
   if (config.enabled) {
-    DDRB |= bit(PB1);
-    DDRB |= bit(PB2);
-    DDRB |= bit(PB3);
     SPCR |= bit(SPE);
     SPCR |= bit(SPIE);
     SPCR &= ~bit(MSTR);
     SPCR &= ~bit(CPOL);
     SPCR &= ~bit(CPHA);
   } else {
-    DDRB &= ~bit(PB1);
-    DDRB &= ~bit(PB2);
-    DDRB &= ~bit(PB3);
     SPCR &= ~bit(SPE);
     SPCR &= ~bit(SPIE);
   }
