@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 template<typename T, int32_t length_>
-class data_buffer_t {
+class buffer_t {
 
   public:
 
@@ -11,14 +11,14 @@ class data_buffer_t {
     constexpr static int32_t length{length_};
 
     // Type of this data buffer
-    using this_type = data_buffer_t<T, length_>;
+    using this_type = buffer_t<T, length_>;
 
     // Constructs a data buffer
-    explicit data_buffer_t() = default;
+    explicit buffer_t() = default;
 
     // Constructs a copy of another data buffer
     template<typename U, int32_t other_length>
-    explicit data_buffer_t(const data_buffer_t<U, other_length>& other) {
+    explicit buffer_t(const buffer_t<U, other_length>& other) {
       const int32_t copy_cnt = min(this->length_, other.size());
       for (int32_t i = copy_cnt - 1; i >= 0; i--) {
         push(static_cast<T>(other[i]));
@@ -27,7 +27,7 @@ class data_buffer_t {
 
     // Sets this data buffer's contents equal to annother
     template<typename U, int32_t other_length>
-    data_buffer_t& operator = (const data_buffer_t<U, other_length> & other) {
+    buffer_t& operator = (const buffer_t<U, other_length> & other) {
       this->head_ = 0;
       this->wrap_flag_ = 0;
       const int32_t copy_cnt = min(length_, other.size());
