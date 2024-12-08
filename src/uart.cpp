@@ -44,9 +44,11 @@ static bool valid_uart(const int32_t num) {
   return num >= 0 && num < uart_cnt;
 }
 
+// Init uart peripherals/freeRTOS stuff
 void init_uart() {
   for (int32_t i = 0; i < uart_cnt; i++) {
     uart_output[i].data_sem = xSemaphoreCreateBinary();
+    xSemaphoreGive(uart_output[i].data_sem);
   }
 }
 

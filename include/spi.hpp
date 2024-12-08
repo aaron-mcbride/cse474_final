@@ -25,6 +25,8 @@ struct spi_config_t {
 
 spi_output_t spi_output{};
 
+void init_spi();
+
 bool set_spi_config(const spi_config_t config);
 
 spi_config_t get_spi_config();

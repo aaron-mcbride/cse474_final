@@ -36,7 +36,6 @@ static bool isValidPin(const int32_t num){
 void gpio_init() {
   for (int32_t i = 0; i < gpio_cnt; i++) {
     gpio_outputs[i].data_sem = xSemaphoreCreateBinary();
-  
   }
 }
 

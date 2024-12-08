@@ -18,7 +18,9 @@ struct i2c_config_t {
   uint8_t bus_addr{0x00};  
 };
 
-i2c_output_t i2c_output[2]{};
+i2c_output_t i2c_output{};
+
+void init_i2c();
 
 bool set_i2c_config(const i2c_config_t config);
 

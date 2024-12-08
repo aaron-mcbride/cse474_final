@@ -20,6 +20,12 @@ static constexpr baud_ref_t baud_ref[8] = {
   {15625, 1, 1, 1}
 };
 
+// Initialize SPI
+void init_spi() {
+  spi_output.data_sem = xSemaphoreCreateBinary();
+  xSemaphoreGive(spi_output.data_sem);
+}
+
 // Update the spi peripheral's configuration
 bool set_spi_config(const spi_config_t config) {
 
