@@ -2,10 +2,6 @@
 #include "uart.hpp"
 
 struct uart_ref_t {
-  int32_t rx_pin;
-  int32_t tx_pin;
-  int32_t clk_pin;
-  volatile uint8_t* ddr_reg;
   volatile uint8_t* ctrl_reg_a;
   volatile uint8_t* ctrl_reg_b;
   volatile uint8_t* ctrl_reg_c;
@@ -19,10 +15,10 @@ struct baud_ref_t {
 };
 
 static constexpr uart_ref_t uart_ref[4] = {
-  {0, 1, 2, &DDRE, &UCSR0A, &UCSR0B, &UCSR0C, &UDR0, &UBRR0},
-  {2, 3, 5, &DDRD, &UCSR1A, &UCSR1B, &UCSR1C, &UDR1, &UBRR1},
-  {0, 1, 2, &DDRH, &UCSR2A, &UCSR2B, &UCSR2C, &UDR2, &UBRR2},
-  {0, 1, 2, &DDRJ, &UCSR3A, &UCSR3B, &UCSR3C, &UDR3, &UBRR3},
+  {&UCSR0A, &UCSR0B, &UCSR0C, &UDR0, &UBRR0},
+  {&UCSR1A, &UCSR1B, &UCSR1C, &UDR1, &UBRR1},
+  {&UCSR2A, &UCSR2B, &UCSR2C, &UDR2, &UBRR2},
+  {&UCSR3A, &UCSR3B, &UCSR3C, &UDR3, &UBRR3},
 };
 
 static constexpr int32_t baud_rate_cnt{10};
@@ -115,9 +111,6 @@ bool set_uart_config(const int32_t num, const uart_config_t config) {
   }
   // set enabled
   if (config.enabled) {    
-    *ref.ddr_reg |= bit(ref.rx_pin);
-    *ref.ddr_reg |= bit(ref.tx_pin);
-    *ref.ddr_reg |= bit(ref.clk_pin);
     *ref.ctrl_reg_b |= bit(RXEN0);
     *ref.ctrl_reg_b |= bit(RXCIE0);
     *ref.ctrl_reg_b &= ~bit(TXEN0);
@@ -126,9 +119,6 @@ bool set_uart_config(const int32_t num, const uart_config_t config) {
   } else {
     *ref.ctrl_reg_b &= ~bit(RXEN0);
     *ref.ctrl_reg_b &= ~bit(RXCIE0);
-    *ref.ddr_reg &= ~bit(ref.rx_pin);
-    *ref.ddr_reg &= ~bit(ref.tx_pin);
-    *ref.ddr_reg &= ~bit(ref.clk_pin);
   }
   return true;
 }
