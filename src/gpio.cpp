@@ -22,7 +22,7 @@ int32_t gpio_freq[3]{0, 0, 0};
 
 TaskHandle_t gpio_tasks[3]{nullptr, nullptr, nullptr};
 
-void gpio_task(void *pvParameters){
+static void gpio_task(void *pvParameters){
     gpio_ref_t* curr = static_cast<gpio_ref_t*>(pvParameters);
     for(;;){
         xSemaphoreTake(gpio_outputs[curr->gpio_num].data_sem, 10);
@@ -32,7 +32,7 @@ void gpio_task(void *pvParameters){
     }    
 }
 
-bool isValidPin(const int32_t num){
+static bool isValidPin(const int32_t num){
     return (num < 3 && num >= 0);
 }
 
