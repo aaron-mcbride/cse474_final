@@ -1,8 +1,5 @@
 
-#include <Arduino.h>
 #include "gpio.hpp"
-#include <Arduino_FreeRTOS.h>
-#include <semphr.h>
 
 struct gpio_ref_t {
     uint8_t gpio_num;

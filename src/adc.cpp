@@ -1,6 +1,5 @@
-#include <Arduino.h>
+
 #include "adc.hpp"
-#include <semphr.h>
 
 typedef struct adc_ref_t {
     uint8_t gpio_num;
@@ -9,7 +8,6 @@ typedef struct adc_ref_t {
 } adc_ref_t;
 
 struct adc_config {
-    uint16_t adc_gain;
     uint16_t adc_prescaler;
 };
 
@@ -25,8 +23,28 @@ static bool isValidPin(const int32_t num){
     return (num < 3 && num >= 0);
 }
 
-static bool set_adc_config(const int32_t num, const adc_config gc) {
-    if(!isValidPin(num)){ return false; }
+static bool set_adc_config(const adc_config ac) {
+
+    // set prescaler
+    uint16_t scale = ac.adc_prescaler;
+    ADCSRA &= ~(0x07);  // clear prescaler
+    // set division factor in 3 LSB of ADCSRA reg
+    if(scale <= 2){
+        ADCSRA |= 0x01;
+    } else if(scale <= 4){
+        ADCSRA |= 0x02;
+    } else if(scale <= 8){
+        ADCSRA |= 0x03;
+    } else if(scale <= 16){
+        ADCSRA |= 0x04;
+    } else if(scale <= 32){
+        ADCSRA |= 0x05;
+    } else if(scale <= 64){
+        ADCSRA |= 0x06;
+    } else if(scale <= 128){
+        ADCSRA |= 0x07;
+    }
+
     return true;
 }
 
