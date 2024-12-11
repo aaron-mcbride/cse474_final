@@ -8,20 +8,12 @@ constexpr uint32_t adc_buffer_size{1024};
 constexpr uint32_t adc_cnt{3};
 
 struct adc_output_t {
-  uint8_t adc_data;
-  SemaphoreHandle_t data_sem{NULL};
+  uint32_t adc_data;
+  // SemaphoreHandle_t data_sem{NULL};
 };
 
-struct adc_config {
-    bool enabled{false}; 
-    uint32_t frequency;
-};
 
-static SemaphoreHandle_t ADC_semaphore;
-
-adc_output_t adc_outputs[3];
-
-bool set_adc_config(const int32_t num, const adc_config gc);
+// bool set_adc_config(const int32_t num, const adc_config gc);
 
 void adc_init(void);
 

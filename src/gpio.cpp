@@ -6,26 +6,31 @@ struct gpio_ref_t {
     uint32_t pin_num;
     volatile uint8_t* port_reg;
     volatile uint8_t* ddr_reg;
+    volatile uint8_t* pin_reg;
     uint8_t portreg_bit;
 };
 
 gpio_ref_t gpiopins[3]{
-    {uint8_t(0), uint32_t(23), &PORTA, &DDRA, uint8_t(1)},
-    {uint8_t(1), uint32_t(25), &PORTA, &DDRA, uint8_t(3)},
-    {uint8_t(2), uint32_t(27), &PORTA, &DDRA, uint8_t(5)}
+    {uint8_t(0), uint32_t(23), &PORTA, &DDRA, &PINA, uint8_t(1)},
+    {uint8_t(1), uint32_t(25), &PORTA, &DDRA, &PINA, uint8_t(3)},
+    {uint8_t(2), uint32_t(27), &PORTA, &DDRA, &PINA, uint8_t(5)}
 };
+
+gpio_output_t gpio_outputs[3];
 
 int32_t gpio_freq[3]{0, 0, 0};
 
 TaskHandle_t gpio_tasks[3]{nullptr, nullptr, nullptr};
 
-static void gpio_task(void *pvParameters){
+void gpio_task(void *pvParameters){
     gpio_ref_t* curr = static_cast<gpio_ref_t*>(pvParameters);
+    bool pinState;
     for(;;){
         xSemaphoreTake(gpio_outputs[curr->gpio_num].data_sem, 10);
-        gpio_outputs[curr->gpio_num].gpio_data.push((*(curr->port_reg) & (1 << curr->portreg_bit)) ? true : false);
+         pinState = (*(curr->pin_reg) & (1 << curr->portreg_bit)) != 0; // Look at PIN reg to determine value
+        gpio_outputs[curr->gpio_num].gpio_data.push(pinState);
         xSemaphoreGive(gpio_outputs[curr->gpio_num].data_sem);
-        vTaskDelay(100 / (gpio_freq[curr->gpio_num] * (portTICK_PERIOD_MS)));
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }    
 }
 
@@ -43,6 +48,8 @@ void gpio_init(void) {
             2,
             &gpio_tasks[i]
         );
+        *(gpiopins[i].ddr_reg) &= ~(1 << gpiopins[i].portreg_bit); // set to input
+        *(gpiopins[i].port_reg) |= (1 << gpiopins[i].portreg_bit); // enable pullup
         gpio_outputs[i].data_sem = xSemaphoreCreateBinary();
         xSemaphoreGive(gpio_outputs[i].data_sem);
     }

@@ -15,9 +15,7 @@ struct gpio_output_t {
 typedef struct gpio_config {
   bool enabled{false}; 
   int32_t frequency;
-};
-
-gpio_output_t gpio_outputs[3];
+} gpio_config;
 
 void gpio_init();
 
