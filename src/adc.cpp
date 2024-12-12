@@ -13,9 +13,6 @@ typedef struct adc_config {
     uint16_t adc_prescaler;
 } adc_config;
 
-static SemaphoreHandle_t ADC_semaphore;
-
-static adc_output_t adc_outputs[3];
 
 adc_ref_t adcpins[3] = {
     {uint8_t(0), A0, 0},
@@ -24,6 +21,9 @@ adc_ref_t adcpins[3] = {
 };
 
 TaskHandle_t adc_tasks[3]{nullptr, nullptr, nullptr};
+adc_output_t adc_outputs[3] = {};
+SemaphoreHandle_t ADC_semaphore = NULL;
+
 
 static bool isValidPin(const int32_t num){
     return (num < 3 && num >= 0);
@@ -60,7 +60,6 @@ void adc_init(void){
     ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); // set prescaler to 128
 
     wdt_disable();
-
     ADC_semaphore = xSemaphoreCreateMutex();
 
     for(int i = 0; i < 3; i++){

@@ -16,21 +16,27 @@ gpio_ref_t gpiopins[3]{
     {uint8_t(2), uint32_t(27), &PORTA, &DDRA, &PINA, uint8_t(5)}
 };
 
-gpio_output_t gpio_outputs[3];
-
 int32_t gpio_freq[3]{0, 0, 0};
+
+gpio_output_t gpio_outputs[3] = {};
+
 
 TaskHandle_t gpio_tasks[3]{nullptr, nullptr, nullptr};
 
 void gpio_task(void *pvParameters){
     gpio_ref_t* curr = static_cast<gpio_ref_t*>(pvParameters);
     bool pinState;
+    int i = 0;
     for(;;){
         xSemaphoreTake(gpio_outputs[curr->gpio_num].data_sem, 10);
-         pinState = (*(curr->pin_reg) & (1 << curr->portreg_bit)) != 0; // Look at PIN reg to determine value
+        pinState = (*(curr->pin_reg) & (1 << curr->portreg_bit)) != 0; // Look at PIN reg to determine value
         gpio_outputs[curr->gpio_num].gpio_data.push(pinState);
+        if(i % 100  == 0 && curr->gpio_num == 0){
+            Serial.println(pinState);
+        }
+        i++;
         xSemaphoreGive(gpio_outputs[curr->gpio_num].data_sem);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(15 / portTICK_PERIOD_MS);
     }    
 }
 
@@ -49,7 +55,7 @@ void gpio_init(void) {
             &gpio_tasks[i]
         );
         *(gpiopins[i].ddr_reg) &= ~(1 << gpiopins[i].portreg_bit); // set to input
-        *(gpiopins[i].port_reg) |= (1 << gpiopins[i].portreg_bit); // enable pullup
+        // *(gpiopins[i].port_reg) |= (1 << gpiopins[i].portreg_bit); // enable pullup
         gpio_outputs[i].data_sem = xSemaphoreCreateBinary();
         xSemaphoreGive(gpio_outputs[i].data_sem);
     }

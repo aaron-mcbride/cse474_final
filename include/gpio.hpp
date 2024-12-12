@@ -12,6 +12,8 @@ struct gpio_output_t {
   SemaphoreHandle_t data_sem{NULL};
 };
 
+extern gpio_output_t gpio_outputs[3];
+
 typedef struct gpio_config {
   bool enabled{false}; 
   int32_t frequency;

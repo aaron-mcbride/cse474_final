@@ -12,6 +12,9 @@ struct adc_output_t {
   // SemaphoreHandle_t data_sem{NULL};
 };
 
+extern adc_output_t adc_outputs[3];
+
+extern SemaphoreHandle_t ADC_semaphore;
 
 // bool set_adc_config(const int32_t num, const adc_config gc);
 
