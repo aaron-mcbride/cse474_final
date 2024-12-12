@@ -98,7 +98,6 @@ void adc_task(void *pvParameters){
     int i = 0;
     adc_ref_t* curr = static_cast<adc_ref_t*>(pvParameters);
     uint32_t ADC_code;
-    const TickType_t xFrequency = pdMS_TO_TICKS(1000);
     
     for(;;){
 

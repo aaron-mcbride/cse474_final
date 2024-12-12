@@ -1,4 +1,5 @@
 
+#pragma once
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h>
 #include <semphr.h>
@@ -16,7 +17,7 @@ struct tc_config_t {
   bool enabled{false};
 };
 
-tc_output_t tc_output[tc_cnt]{};
+extern tc_output_t tc_output[tc_cnt];
 
 void init_tc();
 

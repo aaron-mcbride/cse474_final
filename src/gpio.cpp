@@ -1,6 +1,8 @@
 
 #include "gpio.hpp"
 
+gpio_output_t gpio_outputs[3]{};
+
 struct gpio_ref_t {
     uint8_t gpio_num;
     uint32_t pin_num;
@@ -16,10 +18,7 @@ gpio_ref_t gpiopins[3]{
     {uint8_t(2), uint32_t(27), &PORTA, &DDRA, &PINA, uint8_t(5)}
 };
 
-int32_t gpio_freq[3]{0, 0, 0};
-
-gpio_output_t gpio_outputs[3] = {};
-
+static int32_t gpio_freq[3]{0, 0, 0};
 
 TaskHandle_t gpio_tasks[3]{nullptr, nullptr, nullptr};
 
@@ -27,7 +26,7 @@ void gpio_task(void *pvParameters){
     gpio_ref_t* curr = static_cast<gpio_ref_t*>(pvParameters);
     bool pinState;
     int i = 0;
-    for(;;){
+    for(;;) {
         xSemaphoreTake(gpio_outputs[curr->gpio_num].data_sem, 10);
         pinState = (*(curr->pin_reg) & (1 << curr->portreg_bit)) != 0; // Look at PIN reg to determine value
         gpio_outputs[curr->gpio_num].gpio_data.push(pinState);

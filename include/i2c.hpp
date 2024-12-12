@@ -1,6 +1,7 @@
 
 #pragma once
 #include <Arduino.h>
+
 #include <Arduino_FreeRTOS.h>
 #include <semphr.h>
 #include "buffer.hpp"
@@ -13,15 +14,13 @@ struct i2c_output_t {
 };
 
 struct i2c_config_t {
-  bool enabled{false};
-  int32_t baud_rate{9600};
-  uint8_t bus_addr{0x00};  
+  bool enabled;
+  int32_t baud_rate;
+  uint8_t bus_addr;
 };
 
-i2c_output_t i2c_output{};
+extern i2c_output_t i2c_output;
 
 void init_i2c();
 
 bool set_i2c_config(const i2c_config_t config);
-
-i2c_config_t get_i2c_config();

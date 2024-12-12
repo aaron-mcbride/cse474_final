@@ -1,6 +1,7 @@
 
-#include <stdint.h>
+#pragma once
 #include <Arduino.h>
+#include <stdint.h>
 
 template<typename T, int32_t length_>
 class buffer_t {

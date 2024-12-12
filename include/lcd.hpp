@@ -1,14 +1,16 @@
+
 #pragma once
 #include <Arduino.h>
-#include "adc.hpp"
-// #include "spi.hpp"
-// #include "uart.hpp"
-#include "gpio.hpp"
-// #include "i2c.hpp"
+#include <Arduino_FreeRTOS.h>
 #include <LiquidCrystal.h>
 #include <string.h>
 #include <semphr.h>
-#include <string.h>
+#include "adc.hpp"
+#include "gpio.hpp"
+#include "i2c.hpp"
+#include "spi.hpp"
+#include "uart.hpp"
+#include "tc.hpp"
 
 // indecies/state: 
 // 0: I2C

@@ -2,6 +2,8 @@
 #include "tc.hpp"
 #include "limits.h"
 
+tc_output_t tc_output[tc_cnt]{};
+
 static constexpr int32_t max_cnt{UINT16_MAX};
 
 enum class edge_t {

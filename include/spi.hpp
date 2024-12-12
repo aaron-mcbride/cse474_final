@@ -7,9 +7,9 @@
 
 constexpr int32_t spi_buffer_size{1024};
 
-enum class spi_order_t {
-  msb_first,
-  lsb_first
+enum class spi_order_t : int32_t {
+  lsb_first = 0,
+  msb_first = 1
 };
 
 struct spi_output_t {
@@ -18,15 +18,14 @@ struct spi_output_t {
 };
 
 struct spi_config_t {
-  bool enabled{false};
-  int32_t baud_rate{9600};
-  spi_order_t data_order{spi_order_t::msb_first};
+  bool enabled;
+  spi_order_t data_order;
 };
 
-spi_output_t spi_output{};
+extern spi_output_t spi_output;
 
 void init_spi();
 
-bool set_spi_config(const spi_config_t config);
+void set_spi_config(const spi_config_t config);
 
 spi_config_t get_spi_config();

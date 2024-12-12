@@ -31,7 +31,7 @@ void lcd_init(){
     );
 }
 
-static void lcd_task(void *pvParameters) {
+void lcd_task(void *pvParameters) {
     lcd.begin(16, 2);
     String s1, s2, prevs;
     int adc_decimal;
@@ -166,7 +166,7 @@ static void lcd_task(void *pvParameters) {
     }
 }
 
-static void lcd_change_state_task(void *pvParameters) {
+void lcd_change_state_task(void *pvParameters) {
     uint32_t joystick_x;
     for(;;){
         // read from ADCS
